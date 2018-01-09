@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="fe_01_style.css" type="text/css" />
 </head>
 <body>
     <div class="content">
         <div id="response-message" class="message">response message here</div>
         <div class="datagrid">
-            <table>
+            <table class="table">
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
@@ -21,8 +20,8 @@
                     <td>31</td>
                     <td>Male</td>
                     <td>
-                        <a href="javascript:;" data-id="1">view</a>
-                        <a href="javascript:;" data-id="1">remove</a>
+                        <a class="view" href="javascript:;" data-id="1">view</a>
+                        <a class="delete" href="javascript:;" data-id="1">remove</a>
                     </td>
                 </tr>
                 <tr>
@@ -31,52 +30,82 @@
                     <td>29</td>
                     <td>Female</td>
                     <td>
-                        <a href="javascript:;" data-id="2">view</a>
-                        <a href="javascript:;" data-id="2">remove</a>
+                        <a class="view"  href="javascript:;" data-id="2">view</a>
+                        <a class="delete" href="javascript:;" data-id="2">remove</a>
                     </td>
                 </tr>
             </table>
         </div>
     </div>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 <script>
-
     var App = function(){
-        var url = 'api';
-
+        var url = 'api'
+          , ajaxTimer = null; 
         function view(event) {
-            var id = '??'; //please determine the id
+            const id = $(event.target).data('id') //please determine the id
+                , data = {}
+                , respEl = $('#response-message');
+            if(ajaxTimer){
+               clearTimeout(ajaxTimer);
+               respEl.removeClass('message--show');
+            }
             $.ajax({
                 url: url + '/view/' +id,
                 data: data
             }).done( function (data){
-
+               // mock random data
+               const result = Math.round(Math.random()),
+                     message = result ? 'Request has been done' : 'Request is failed!'
+               toggleResponse(result, message);
             });
         }
-
         function remove(event) {
-            var id = '??'; //please determine the id
+            const id = '??' //please determine the id
+              , data = {}
+              , $el = $(event.target);
             $.ajax({
                 url: url + '/remove/' + id ,
                 data: data
             }).done( function (data){
-
+              dele($el);
             });
         }
-
-        function initialize() {
-            //
+      
+        function dele($el) {
+          $el.closest('tr').hide("puff").delay(10).queue(function(){$(this).remove();});
         }
-
+        
+        function toggleResponse(status, data) {
+          const respEl = $('#response-message')
+              , statusAddClass = status ? 'message--success' : 'message--failed'
+              , statusRemoveClass = status ? 'message--failed' : 'message--success';
+          respEl
+            .addClass('message--show')
+            .removeClass(statusRemoveClass)
+            .addClass(statusAddClass)
+            .text(data);
+          ajaxTimer = setTimeout(function(){
+              respEl.removeClass('message--show')
+          }, 5000);
+        }
         return {
-            //
+          view:view,
+          remove: remove
         }
-
     }();
-
+  
     $(function () {
-
+      const views = $('.view').toArray()
+          , removes = $('.delete').toArray()
+          , app = App
+      
+      views.forEach(function(el){
+        $(el).on('click', app.view)
+      })
+      removes.forEach(function(el){
+        $(el).on('click', app.remove)
+      })
     });
 </script>
 </body>
